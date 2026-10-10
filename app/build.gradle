@@ -1,0 +1,47 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.jarvis.local'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.jarvis.local'
+        minSdk 26
+        targetSdk 34
+        versionCode 3
+        versionName '3.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Release APKs MUST be signed or Android refuses to install them
+    // (and Gradle names the file app-release-unsigned.apk).
+    // The GitHub workflow creates this keystore automatically.
+    signingConfigs {
+        jarvis {
+            def ks = file('jarvis.keystore')
+            if (ks.exists()) {
+                storeFile ks
+                storePassword 'jarvis123'
+                keyAlias 'jarvis'
+                keyPassword 'jarvis123'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig file('jarvis.keystore').exists() ? signingConfigs.jarvis : signingConfigs.debug
+        }
+        debug { minifyEnabled false }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
