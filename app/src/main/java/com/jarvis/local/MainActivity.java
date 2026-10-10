@@ -1,5 +1,7 @@
 package com.xsoftwareabdullah.jarvis;
-
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.widget.ImageView;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
@@ -19,18 +21,26 @@ public class MainActivity extends AppCompatActivity {
     JarvisVoice jarvisVoice;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+    
+    // BLUE Reactor Animation
+    ImageView reactor = findViewById(R.id.arcReactor);
+    ObjectAnimator anim = ObjectAnimator.ofFloat(reactor, "rotation", 0f, 360f);
+    anim.setDuration(4000);
+    anim.setRepeatCount(ValueAnimator.INFINITE);
+    anim.start();
+    
+    inputField = findViewById(R.id.inputField);
+    chatText = findViewById(R.id.chatText);
+    btnSend = findViewById(R.id.btnSend);
+    btnMic = findViewById(R.id.btnMic);
+    btnBgListening = findViewById(R.id.btnBgListening);
+    btnSettings = findViewById(R.id.btnSettings);
 
-        inputField = findViewById(R.id.inputField);
-        chatText = findViewById(R.id.chatText);
-        btnSend = findViewById(R.id.btnSend);
-        btnMic = findViewById(R.id.btnMic);
-        btnBgListening = findViewById(R.id.btnBgListening);
-        btnSettings = findViewById(R.id.btnSettings);
-
-        jarvisVoice = new JarvisVoice(this);
+    jarvisVoice = new JarvisVoice(this);
+}
 
         btnSend.setOnClickListener(v -> sendToJarvis());
 
