@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#020A14">
+
+    <!-- Top HUD -->
+    <TextView
+        android:id="@+id/topHud"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp"
+        android:text="J A R V I S  //  LOCAL CORE"
+        android:textColor="#00E5FF"
+        android:textSize="16sp"
+        android:letterSpacing="0.25"
+        android:fontFamily="monospace" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/topHud"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="4dp"
+        android:text="● ONLINE • LOCAL • ARMED"
+        android:textColor="#00FF9C"
+        android:textSize="10sp"
+        android:fontFamily="monospace" />
+
+    <!-- Center BLUE Reactor -->
+    <ImageView
+        android:id="@+id/arcReactor"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/bg_reactor_blue" />
+
+    <!-- Chat Glass Area -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="230dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="125dp"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_glass_input"
+        android:padding="12dp">
+        <TextView
+            android:id="@+id/chatText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="JARVIS: Hello Sir, Blue core online."
+            android:textColor="#C9F1FF"
+            android:fontFamily="monospace"
+            android:lineSpacingExtra="3dp"/>
+    </ScrollView>
+
+    <!-- Bottom Input Area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:background="#020A14">
+
+        <EditText
+            android:id="@+id/inputField"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_glass_input"
+            android:hint="Ask JARVIS anything..."
+            android:textColor="#FFFFFF"
+            android:hintTextColor="#6ED6FF"
+            android:paddingLeft="15dp"
+            android:fontFamily="monospace"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+            <Button android:id="@+id/btnMic" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:text="MIC / VOICE" android:textColor="#00E5FF" android:background="@drawable/bg_ultron_btn"/>
+            <Button android:id="@+id/btnSend" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:layout_marginStart="8dp" android:text="SEND" android:textColor="#020A14" android:background="@drawable/bg_ultron_btn_active"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
+            <Button android:id="@+id/btnBgListening" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:text="BACKGROUND LISTENING" android:textSize="11sp" android:textColor="#00E5FF" android:background="@drawable/bg_ultron_btn"/>
+            <Button android:id="@+id/btnSettings" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:layout_marginStart="8dp" android:text="ANDROID SETTINGS" android:textSize="11sp" android:textColor="#00E5FF" android:background="@drawable/bg_ultron_btn"/>
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>
