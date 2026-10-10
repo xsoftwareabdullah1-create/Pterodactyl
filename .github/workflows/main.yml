@@ -1,0 +1,138 @@
+name: Build JARVIS APK
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        id: java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # No third-party Android action: GitHub runners already include the
+      # Android SDK (ANDROID_HOME). We only make sure licenses are accepted.
+      - name: Prepare Android SDK
+        id: sdk
+        continue-on-error: true
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools" || true
+          mkdir -p "$ANDROID_HOME/licenses"
+          SM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ -x "$SM" ]; then yes | "$SM" --licenses >/dev/null 2>&1 || true; fi
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      # AGP 8.2.2 needs Gradle 8.2.x. The runner's built-in Gradle is newer
+      # and incompatible, so download the exact version.
+      - name: Install Gradle 8.2.1
+        id: gradle
+        continue-on-error: true
+        run: |
+          curl -fsSL --retry 4 -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
+          unzip -q /tmp/gradle.zip -d /opt
+          /opt/gradle-8.2.1/bin/gradle --version
+
+      # Overwrite the 3 tiny config files with known-good versions.
+      - name: Write known-good Gradle config
+        id: config
+        continue-on-error: true
+        run: |
+          cat > settings.gradle <<'EOT'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          rootProject.name = "JARVIS-Local-Android"
+          include(":app")
+          EOT
+          cat > build.gradle <<'EOT'
+          plugins { id 'com.android.application' version '8.2.2' apply false }
+          EOT
+          cat > gradle.properties <<'EOT'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          EOT
+          cat > app/build.gradle <<'EOT'
+          plugins { id 'com.android.application' }
+          android {
+              namespace 'com.jarvis.local'
+              compileSdk 34
+              defaultConfig {
+                  applicationId 'com.jarvis.local'
+                  minSdk 26
+                  targetSdk 34
+                  versionCode 3
+                  versionName '3.0'
+              }
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+              buildTypes { debug { minifyEnabled false } }
+              lint { abortOnError false; checkReleaseBuilds false }
+          }
+          EOT
+
+      - name: Build APK
+        id: build
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          /opt/gradle-8.2.1/bin/gradle --no-daemon --stacktrace assembleDebug 2>&1 | tee build.log
+
+      - name: Collect APK
+        id: collect
+        if: steps.build.outcome == 'success'
+        run: |
+          mkdir -p output
+          APK=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          echo "Found: $APK"
+          cp "$APK" output/Jarvis.apk
+          ls -lh output/Jarvis.apk
+
+      # Writes results as annotations so they can be read without logging in.
+      - name: Report (diagnostics)
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os, subprocess
+          def esc(s): return s.replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+          out = lambda c: subprocess.run(c, shell=True, capture_output=True, text=True).stdout
+          print('::notice title=Step results::' + esc(
+              "checkout=${{ steps.checkout.outcome }}\njava=${{ steps.java.outcome }}\n"
+              "sdk=${{ steps.sdk.outcome }}\ngradle=${{ steps.gradle.outcome }}\n"
+              "config=${{ steps.config.outcome }}\nbuild=${{ steps.build.outcome }}\n"
+              "collect=${{ steps.collect.outcome }}"))
+          print('::notice title=Repo files::' + esc(out("find . -path ./.git -prune -o -type f -print | grep -v '/build/' | sort | head -80")))
+          if os.path.exists('build.log') and "${{ steps.build.outcome }}" != "success":
+              t = open('build.log', errors='replace').read()
+              print('::error title=Gradle output (end)::' + esc(t[-3500:]))
+          PY
+
+      - name: Upload Jarvis.apk
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Jarvis
+          path: output/Jarvis.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Fail if build failed
+        if: steps.build.outcome != 'success'
+        run: exit 1
+        
